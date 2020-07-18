@@ -12,3 +12,51 @@
 // the screen should remain fully clear as long as no key is pressed.
 
 // Put your code here.
+
+(LOOP)
+    @SCREEN
+    D=A
+    @addr   // every loop, reset addr to screen memory map start
+    M=D
+
+    @KBD    // check if user is pressing any key
+    D=M
+    @CLEAR  // no press = 0, jump to CLEAR
+    D;JEQ
+    @DARK   // otherwise, jump to DARK
+    0;JMP
+
+(CLEAR)
+    @addr   
+    A=M     // set Areg to M[addr]
+    M=0     // set M[ M[addr] ] = 0 [WHITE]
+    @addr   
+    MD=M+1  // set Dreg and M[addr] to M + 1
+    @24576      
+    D=D-A   // test if past the screen memory map
+    @LOOP   // if true, jump to LOOP
+    D;JEQ
+    @CLEAR  // else jump to CLEAR again
+    0;JMP
+
+(DARK)
+    @addr   
+    A=M     // set Areg to M[addr]
+    M=-1     // set M[ M[addr] ] = -1 [BLACK]
+    @addr   
+    MD=M+1  // set Dreg and M[addr] to M + 1
+    @24576      
+    D=D-A   // test if past the screen memory map
+    @LOOP   // if true, jump to LOOP
+    D;JEQ
+    @DARK  // else jump to DARK again
+    0;JMP
+    
+
+
+
+
+
+    
+
+

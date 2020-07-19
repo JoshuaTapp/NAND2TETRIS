@@ -39,5 +39,50 @@ CHIP CPU {
         pc[15];          // address of next instruction
 
     PARTS:
-    // Put your code here:
+        
+        //  When instruction[12] ? y = Areg : y = inM
+        //
+        ALU(x=Dout, y=Aout, zx=instruction[11], nx=instruction[10], zy=instruction[9],
+            ny=instruction[8], f=instruction[7], no=instruction[6], out=ALUout, out=outM, zr=zr, ng=ng);
+        
+        //  A Register
+        ARegister(in=Ain, load=writeA, out=Areg, out[0..14]=addressM);
+        
+        //  D Register
+        DRegister(in=ALUout, load=writeD, out=Dout); 
+        
+        //  Program Counter
+        //      sets value to current Areg if jump is true, otherwise increment.
+        //      If reset is true, jumps to instruction x0000
+        PC(in=Areg, load=jmp, inc=true, reset=reset, out[0..14]=pc);
+
+        //  A-Reg Mux
+        Mux16(a=instruction, b=ALUout, sel=instruction[15], out=Ain);
+
+        //  A/M Mux
+        Mux16(a=Areg, b=inM, sel=instruction[12], out=Aout);
+
+        //  Control Logic
+            // JMP
+            And(a=instruction[2], b=ng, out=jlt);
+
+            And(a=instruction[1], b=zr, out=jeq);
+
+            Not(in=ng, out=gt);
+            Not(in=zr, out=nz);
+            And(a=gt, b=nz, out=nzgt);
+            And(a=instruction[0], b=nzgt, out=jgt);
+            
+            Or(a=jlt, b=jeq, out=jmp1);
+            Or(a=jmp1, b=jgt, out=jmp2);
+            And(a=jmp2, b=instruction[15], out=jmp);
+            
+
+            // Dest.
+            And(a=instruction[15], b=instruction[5], out=writeA1);
+            Not(in=instruction[15], out=ldAddr);
+            Or(a=writeA1, b=ldAddr, out=writeA);
+            And(a=instruction[15], b=instruction[4], out=writeD);
+            And(a=instruction[15], b=instruction[3], out=writeM);
+
 }

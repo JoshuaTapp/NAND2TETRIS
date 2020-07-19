@@ -27,5 +27,20 @@ CHIP Memory {
     OUT out[16];
 
     PARTS:
-    // Put your code here:
+        Not(in=address[14], out=notAddr);       //  test if address is in RAM16k
+        And(a=notAddr, b=load, out=memLoad);    //  address space and that load = true
+
+        And(a=address[14], b=load, out=screenLoad); // test if in screen memory map and load = true
+
+        // Components that make up memory chip.
+        // memory address are in order of appearance.
+        // Ram16k: 0-16383, Screen: 16384-24575, Keyboard: 24576
+        RAM16K(in=in, load=memLoad, address=address[0..13], out=memOut);
+        Screen(in=in, load=screenLoad, address=address[0..12], out=screenOut);
+        Keyboard(out=keyOut);
+
+
+        // Select data out based on address input.
+        Mux4Way16(a=memOut, b=memOut, c=screenOut, d=keyOut, sel=address[13..14], out=out);
+
 }
